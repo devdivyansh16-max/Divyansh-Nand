@@ -1,0 +1,650 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#17131a">
+  <title>Hack Computer Lab — Capstone</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #17131a;
+      --panel: #0e0b10;
+      --panel-soft: #211b24;
+      --line: #39313e;
+      --text: #f6f0f6;
+      --muted: #b7acbb;
+      --gold: #d9a8d7;
+      --green: #86d6a3;
+      --red: #f0a08d;
+      --mono: "JetBrains Mono", "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+      font-family: "IBM Plex Sans", Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: radial-gradient(ellipse at 9% 50%, #382938 0, transparent 34%), var(--bg);
+      color: var(--text);
+    }
+    button, input { font: inherit; }
+    a { color: inherit; text-decoration: none; }
+    button:focus-visible, a:focus-visible, input:focus-visible {
+      outline: 2px solid var(--gold); outline-offset: 3px;
+    }
+    .app {
+      display: grid; grid-template-columns: 218px minmax(0, 1fr); max-width: 1480px;
+      min-height: calc(100vh - 56px); margin: 28px auto; overflow: hidden;
+      border: 1px solid #655967; border-radius: 22px; background: #4a444d;
+      box-shadow: 0 22px 70px #0007;
+    }
+    .sidebar {
+      position: sticky; top: 28px; height: calc(100vh - 56px); min-height: 620px;
+      display: flex; flex-direction: column; padding: 24px 17px 18px;
+      border-right: 1px solid #302a33; background: #0b090c;
+    }
+    .brand { display: flex; gap: 12px; align-items: center; padding: 0 7px 31px; }
+    .brand-mark {
+      display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px;
+      background: linear-gradient(135deg, #edc0e8, #a98aae); color: #211923; font: 800 17px var(--mono);
+    }
+    .brand-name { display: block; font-size: 13px; font-weight: 750; letter-spacing: .07em; }
+    .brand-sub { display: block; margin-top: 3px; color: var(--muted); font-size: 11px; }
+    .nav-label { padding: 0 10px 9px; color: #76828d; font-size: 10px; font-weight: 700; letter-spacing: .15em; }
+    .nav { display: grid; gap: 5px; }
+    .nav a {
+      display: flex; align-items: center; gap: 11px; padding: 11px 10px;
+      border: 1px solid transparent; border-radius: 9px; color: #b6bec5; font-size: 13px;
+    }
+    .nav a:hover, .nav a.active { color: var(--text); background: linear-gradient(100deg, #614c64, #231d27); border-color: #57465a; }
+    .nav-icon { display: inline-grid; place-items: center; width: 21px; color: #d7afd5; font: 12px var(--mono); }
+    .side-spacer { flex: 1; }
+    .student {
+      padding: 14px; border: 1px solid #352d38; border-radius: 12px; background: #151116;
+    }
+    .student-label { color: var(--muted); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; }
+    .student-name { margin-top: 8px; font-size: 14px; font-weight: 700; }
+    .student-roll { margin-top: 4px; color: var(--muted); font: 11px var(--mono); }
+    .course-note { padding: 13px 5px 0; color: #82909b; font-size: 10px; line-height: 1.65; }
+    main { min-width: 0; width: 100%; padding: 25px 28px 34px; background: #49434d; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 27px; }
+    .crumb { color: var(--muted); font-size: 12px; }
+    .crumb strong { color: var(--text); font-weight: 600; }
+    .live-badge, .tag {
+      display: inline-flex; align-items: center; gap: 7px; padding: 7px 10px;
+      border: 1px solid var(--line); border-radius: 999px; color: #c1c9cf; font-size: 11px;
+    }
+    .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 9px #9bd6a780; }
+    .hero {
+      display: grid; grid-template-columns: minmax(260px, .82fr) minmax(410px, 1.18fr);
+      gap: 28px; align-items: center; padding: 30px; border: 1px solid var(--line);
+      border-radius: 16px; background: radial-gradient(ellipse at 75% 30%, #463549 0, transparent 53%), #211c24;
+    }
+    .eyebrow { color: var(--gold); font-size: 10px; font-weight: 750; letter-spacing: .17em; text-transform: uppercase; }
+    h1 { margin: 14px 0 11px; max-width: 480px; font-size: clamp(29px, 3.2vw, 45px); letter-spacing: -.045em; line-height: 1.08; }
+    .hero-copy { max-width: 420px; color: #aab4bc; font-size: 13px; line-height: 1.7; }
+    .hero-copy strong { color: var(--text); font-weight: 600; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 23px; }
+    .button {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      min-height: 44px; padding: 0 13px; border: 1px solid var(--line); border-radius: 8px;
+      background: #232d38; color: var(--text); cursor: pointer; font-size: 12px; font-weight: 650;
+      transition: transform .15s, background .15s;
+    }
+    .button:hover { transform: translateY(-1px); background: #2b3743; }
+    .button.primary { border-color: #d5a5d4; background: linear-gradient(110deg, #dca9d7, #ad89b5); color: #251b28; }
+    .button.primary:hover { background: linear-gradient(110deg, #efc3eb, #c49acd); }
+    .preview-shell { min-width: 0; padding: 13px; border: 1px solid #453b49; border-radius: 13px; background: #0d0a0f; }
+    .preview-head { display: flex; align-items: center; justify-content: space-between; margin: 0 1px 11px; }
+    .preview-title { font-size: 11px; font-weight: 700; }
+    .screen-state { color: var(--muted); font: 10px var(--mono); }
+    .screen-wrap { overflow: hidden; border: 1px solid #403443; border-radius: 6px; background: #e5e0e6; }
+    canvas { display: block; width: 100%; height: auto; aspect-ratio: 2 / 1; image-rendering: pixelated; }
+    .preview-foot { display: flex; justify-content: space-between; gap: 8px; margin: 10px 2px 0; color: #89949e; font: 10px var(--mono); }
+    .sim-controls { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 11px; }
+    .sim-button {
+      min-height: 44px; padding: 0 11px; border: 1px solid #4a3e4d; border-radius: 7px;
+      background: #19141b; color: #e8dfeb; cursor: pointer; font-size: 11px; font-weight: 650;
+    }
+    .sim-button:hover { border-color: #b68cb8; background: #241c27; }
+    .sim-button:disabled { cursor: not-allowed; opacity: .48; }
+    .sim-button.run { color: #a9e2bb; border-color: #41604b; }
+    .sim-meta { display: flex; flex-wrap: wrap; gap: 7px 15px; margin-top: 10px; color: #b3a8b5; font: 9px var(--mono); }
+    .sim-meta strong { color: #efe7f0; font-weight: 600; }
+    .metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 15px 0 32px; }
+    .metric { padding: 15px 16px; border: 1px solid #3a323d; border-radius: 11px; background: var(--panel); }
+    .metric-label { color: var(--muted); font-size: 10px; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; }
+    .metric-value { margin-top: 8px; font-size: 21px; font-weight: 730; letter-spacing: -.03em; }
+    .metric-detail { margin-top: 4px; color: #b7acbb; font-size: 12px; }
+    .section-heading { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+    h2 { margin: 0; font-size: 19px; letter-spacing: -.025em; }
+    .section-sub { margin-top: 5px; color: var(--muted); font-size: 12px; }
+    .parts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 13px; }
+    .part {
+      min-height: 197px; padding: 17px; border: 1px solid var(--line); border-radius: 12px;
+      background: var(--panel); scroll-margin-top: 18px;
+    }
+    .part-top { display: flex; justify-content: space-between; align-items: center; }
+    .part-number { color: var(--gold); font: 11px var(--mono); }
+    .status { padding: 5px 8px; border: 1px solid #34533d; border-radius: 999px; color: var(--green); font-size: 9px; }
+    .status.missing { border-color: #62473b; color: #e6ad89; }
+    .part h3 { margin: 15px 0 7px; font-size: 14px; }
+    .part p { min-height: 38px; margin: 0; color: #c0b7c3; font-size: 12px; line-height: 1.65; }
+    .part-files { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 13px; }
+    .file-chip { padding: 5px 7px; border: 1px solid #34404b; border-radius: 5px; color: #c0c9d0; font: 9px var(--mono); }
+    .file-chip.absent { border-style: dashed; color: #d3a18a; }
+    .workspace { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, .77fr); gap: 14px; margin-top: 29px; }
+    .panel { padding: 17px; border: 1px solid #3a323d; border-radius: 12px; background: var(--panel); }
+    .panel-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 13px; }
+    .panel-head h2 { font-size: 15px; }
+    .build-form { display: flex; align-items: end; gap: 9px; margin-top: 15px; }
+    .field { display: grid; gap: 6px; min-width: 0; }
+    .field label { color: var(--muted); font-size: 10px; }
+    .field input {
+      width: 190px; max-width: 100%; height: 44px; padding: 0 10px; border: 1px solid var(--line);
+      border-radius: 7px; background: #10161d; color: var(--text); font: 12px var(--mono);
+    }
+    .hint { margin-top: 11px; color: #87939e; font-size: 10px; line-height: 1.65; }
+    .console {
+      min-height: 110px; max-height: 205px; overflow: auto; padding: 12px;
+      border: 1px solid #2d3944; border-radius: 8px; background: #10161d;
+      color: #a8c6a9; white-space: pre-wrap; overflow-wrap: anywhere; font: 10px/1.65 var(--mono);
+    }
+    .console.error { color: #f0a895; }
+    .artifact-list { display: grid; gap: 7px; }
+    .artifact {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      min-height: 36px; padding: 7px 9px; border: 1px solid #2b3641; border-radius: 7px;
+      color: #ccd2d7; font: 10px var(--mono);
+    }
+    .artifact:hover { border-color: #64707b; background: #1c2530; }
+    .artifact small { color: #84919b; font: 9px system-ui, sans-serif; }
+    footer { display: flex; justify-content: space-between; gap: 15px; margin-top: 27px; padding-top: 14px; border-top: 1px solid var(--line); color: #78848e; font-size: 10px; }
+    .toast { position: fixed; right: 20px; bottom: 20px; z-index: 3; padding: 11px 14px; border: 1px solid #46525e; border-radius: 8px; background: #202a34; color: var(--text); font-size: 12px; box-shadow: 0 10px 30px #0006; }
+    [hidden] { display: none !important; }
+    @media (max-width: 1000px) {
+      .app { grid-template-columns: 190px minmax(0, 1fr); margin: 14px; min-height: calc(100vh - 28px); }
+      .sidebar { top: 14px; height: calc(100vh - 28px); }
+      main { padding: 23px 20px 30px; }
+      .hero { grid-template-columns: 1fr; }
+      .hero-copy { max-width: 650px; }
+      .preview-shell { max-width: 680px; }
+      .parts { grid-template-columns: 1fr; }
+      .part { min-height: 0; }
+      .part p { min-height: 0; }
+    }
+    @media (max-width: 650px) {
+      .app { display: block; min-height: 100vh; margin: 0; border: 0; border-radius: 0; overflow: visible; }
+      .sidebar { position: static; width: 100%; height: auto; min-height: 0; padding: 12px 14px; border-right: 0; border-bottom: 1px solid var(--line); }
+      .brand { padding: 0 3px 11px; }
+      .nav-label, .side-spacer, .student, .course-note { display: none; }
+      .nav { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
+      .nav a { justify-content: center; gap: 5px; min-height: 44px; padding: 8px 4px; font-size: 10px; }
+      .nav-icon { width: auto; }
+      main { padding: 18px 14px 28px; }
+      .topbar { margin-bottom: 15px; }
+      .hero { gap: 19px; padding: 19px 15px; }
+      .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .workspace { grid-template-columns: 1fr; }
+      .build-form { align-items: stretch; flex-direction: column; }
+      .field input { width: 100%; }
+      .build-form .button { width: 100%; }
+      footer { flex-direction: column; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; } }
+    html { scroll-behavior: smooth; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <a class="brand" href="#overview" aria-label="Hack Computer Lab dashboard home">
+        <span class="brand-mark">H</span>
+        <span><span class="brand-name">HACK COMPUTER LAB</span><span class="brand-sub">Nand to Tetris · Capstone</span></span>
+      </a>
+      <div class="nav-label">PROJECT</div>
+      <nav class="nav" aria-label="Project navigation">
+        <a class="active" href="#overview"><span class="nav-icon">⌂</span>Overview</a>
+        <a href="#part-a"><span class="nav-icon">A</span>Part A · HDL</a>
+        <a href="#part-b"><span class="nav-icon">B</span>Part B · Assembler</a>
+        <a href="#part-c"><span class="nav-icon">C</span>Part C · Box</a>
+      </nav>
+      <div class="side-spacer"></div>
+      <div class="student">
+        <div class="student-label">Project by</div>
+        <div class="student-name">Divyansh</div>
+        <div class="student-roll">ROLL NO. 2501730385</div>
+      </div>
+      <div class="course-note">ETCNTC301<br>School of Engineering &amp; Technology<br>K.R. Mangalam University</div>
+    </aside>
+
+    <main id="overview">
+      <header class="topbar">
+        <div class="crumb">Capstone project <span aria-hidden="true">/</span> <strong>Project overview</strong></div>
+        <div class="live-badge"><span class="live-dot"></span> Interactive lab</div>
+      </header>
+
+      <section class="hero" aria-labelledby="main-title">
+        <div>
+          <div class="eyebrow">Nand to Tetris · Part C</div>
+          <h1 id="main-title">Make the computer draw a box.</h1>
+          <p class="hero-copy">Run the assembled Hack machine code in a real instruction-level CPU simulation. Hold a key to draw a <strong id="hero-box-size">32 × 20 pixel box</strong>; release to erase it.</p>
+          <div class="hero-actions">
+            <button class="button primary" id="hold-button" type="button">Hold to draw <span aria-hidden="true">↗</span></button>
+            <a class="button" href="#build">Build project</a>
+          </div>
+        </div>
+        <div class="preview-shell">
+          <div class="preview-head">
+            <span class="preview-title">HACK COMPUTER · CPU SIMULATOR</span>
+            <span class="screen-state" id="screen-state" aria-live="polite">LOADING ROM</span>
+          </div>
+          <div class="screen-wrap"><canvas id="screen" width="512" height="256" aria-label="Hack screen memory rendered from the running Box.hack program."></canvas></div>
+          <div class="preview-foot"><span id="screen-coords">ROW 85 — 104 · COL 0 — 31</span><span>512 × 256 PX</span></div>
+          <div class="sim-controls" aria-label="CPU simulator controls">
+            <button class="sim-button run" id="sim-run" type="button" disabled>Run</button>
+            <button class="sim-button" id="sim-pause" type="button" disabled>Pause</button>
+            <button class="sim-button" id="sim-step" type="button" disabled>Step</button>
+            <button class="sim-button" id="sim-reset" type="button" disabled>Reset</button>
+          </div>
+          <div class="sim-meta" aria-live="polite">
+            <span>CPU <strong id="sim-state">LOADING</strong></span>
+            <span>PC <strong id="sim-pc">0000</strong></span>
+            <span>CYCLES <strong id="sim-cycles">0</strong></span>
+            <span>KBD <strong id="sim-kbd">0</strong></span>
+            <span>ROM K <strong id="sim-k">85</strong></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="metrics" aria-label="Personal project values">
+        <div class="metric"><div class="metric-label">Personal number K</div><div class="metric-value" id="metric-k">85</div><div class="metric-detail">Last 2 digits of roll number</div></div>
+        <div class="metric"><div class="metric-label">Box dimensions</div><div class="metric-value" id="metric-size">32 × 20</div><div class="metric-detail">Pixels wide × rows high</div></div>
+        <div class="metric"><div class="metric-label">Screen location</div><div class="metric-value" id="metric-location">Row 85</div><div class="metric-detail">Left edge · x = 0</div></div>
+        <div class="metric"><div class="metric-label">Assembler feature</div><div class="metric-value" id="metric-feature">Line errors</div><div class="metric-detail" id="feature-detail">K mod 3 = 1</div></div>
+      </section>
+
+      <section aria-labelledby="parts-title">
+        <div class="section-heading">
+          <div><h2 id="parts-title">Three parts, one computer</h2><div class="section-sub">Project checklist and the files currently in this workspace.</div></div>
+          <span class="tag">10 MARKS · INDIVIDUAL</span>
+        </div>
+        <div class="parts">
+          <article class="part" id="part-a">
+            <div class="part-top"><span class="part-number">PART A / 03</span><span class="status missing" id="hdl-status">HDL files missing</span></div>
+            <h3>Build the Hack computer</h3>
+            <p>Custom CPU, Memory and Computer HDL are included. Course-standard ALU, registers, PC, RAM, Screen, Keyboard and ROM chips use built-ins as permitted.</p>
+            <div class="part-files">
+              <a class="file-chip" href="/hdl/CPU.hdl" download data-file="hdl/CPU.hdl">CPU.hdl</a>
+              <a class="file-chip" href="/hdl/Memory.hdl" download data-file="hdl/Memory.hdl">Memory.hdl</a>
+              <a class="file-chip" href="/hdl/Computer.hdl" download data-file="hdl/Computer.hdl">Computer.hdl</a>
+            </div>
+          </article>
+          <article class="part" id="part-b">
+            <div class="part-top"><span class="part-number">PART B / 03</span><span class="status" id="assembler-status">Assembler available</span></div>
+            <h3>Write a two-pass assembler</h3>
+            <p>Resolve labels and variables, emit 16-bit machine code, and report errors with source line numbers for K=85.</p>
+            <div class="part-files">
+              <a class="file-chip" href="/assembler.py" download>assembler.py</a>
+              <a class="file-chip" href="/Add.asm" download>Add.asm</a>
+              <a class="file-chip" href="/Max.asm" download>Max.asm</a>
+              <a class="file-chip" href="/Rect.asm" download>Rect.asm</a>
+              <span class="file-chip absent" data-file="Pong.asm">Pong.asm</span>
+            </div>
+          </article>
+          <article class="part" id="part-c">
+            <div class="part-top"><span class="part-number">PART C / 03</span><span class="status" id="box-status">Box program available</span></div>
+            <h3>Draw a keyboard-controlled box</h3>
+            <p>Rows <span id="box-rows">85–104</span>, <span id="box-width-inline">32 pixels</span> wide. This runs the actual .hack instructions, not a drawn mockup.</p>
+            <div class="part-files">
+              <a class="file-chip" href="/Box.asm" download>Box.asm</a>
+              <a class="file-chip" href="/Box.hack" download>Box.hack</a>
+              <a class="file-chip" href="/make_box.py" download>make_box.py</a>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="workspace" id="build">
+        <div class="panel">
+          <div class="panel-head"><h2>Run the project workflow</h2><span class="tag">LOCAL PYTHON</span></div>
+          <div class="section-sub">Regenerate Box.asm and machine code using the existing run_all.py workflow, then reload the simulator ROM.</div>
+          <form class="build-form" id="build-form">
+            <div class="field"><label for="roll-number">University roll number</label><input id="roll-number" inputmode="numeric" autocomplete="off" value="2501730385" pattern="[0-9]+" required></div>
+            <button class="button primary" id="build-button" type="submit">Run build <span aria-hidden="true">→</span></button>
+          </form>
+          <div class="hint">K comes from the last two digits. The build runs the project Python scripts; the browser CPU then executes the generated Box.hack instructions.</div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h2>Build output</h2><span class="tag" id="build-state">READY</span></div>
+          <div class="console" id="console" role="log" aria-live="polite">Ready. Run the workflow to assemble the project, or use the preview to test the box interaction.</div>
+        </div>
+      </section>
+
+      <section class="workspace">
+        <div class="panel">
+          <div class="panel-head"><h2>Project files</h2><span class="tag">DOWNLOAD SOURCE</span></div>
+          <div class="artifact-list">
+            <a class="artifact" href="/hdl/CPU.hdl" download><span>hdl/CPU.hdl</span><small>Hack CPU</small></a>
+            <a class="artifact" href="/hdl/Memory.hdl" download><span>hdl/Memory.hdl</span><small>Memory map</small></a>
+            <a class="artifact" href="/hdl/Computer.hdl" download><span>hdl/Computer.hdl</span><small>Computer wiring</small></a>
+            <a class="artifact" href="/simulator.js" download><span>simulator.js</span><small>Browser Hack CPU</small></a>
+            <a class="artifact" href="/run_all.py" download><span>run_all.py</span><small>Build workflow</small></a>
+            <a class="artifact" href="/run.py" download><span>run.py</span><small>Generate and assemble box</small></a>
+            <a class="artifact" href="/README.md" download><span>README.md</span><small>Project instructions</small></a>
+            <a class="artifact" href="/Add.hack" download><span>Add.hack</span><small>Generated machine code</small></a>
+            <a class="artifact" href="/Max.hack" download><span>Max.hack</span><small>Generated machine code</small></a>
+            <a class="artifact" href="/Rect.hack" download><span>Rect.hack</span><small>Generated machine code</small></a>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h2>Submission notes</h2><span class="tag">NEXT STEPS</span></div>
+          <div class="section-sub" style="line-height:1.85">
+            <strong style="color:var(--text)">Part A:</strong> HDL source files are included. Run the official CPU, Memory and Computer tests in the Nand2Tetris Hardware Simulator and capture screenshots.<br>
+            <strong style="color:var(--text)">Part B:</strong> add Pong.asm and official assembler outputs to compare all four programs.<br>
+            <strong style="color:var(--text)">Part C:</strong> the dashboard simulator executes Box.hack; also capture evidence from the official CPU Emulator.
+          </div>
+        </div>
+      </section>
+      <footer><span>ETCNTC301 · School of Engineering &amp; Technology</span><span>K.R. Mangalam University · Divyansh</span></footer>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" hidden></div>
+  <script src="/simulator.js"></script>
+  <script>
+    (function () {
+      "use strict";
+      const canvas = document.getElementById("screen");
+      const context = canvas.getContext("2d");
+      const rollField = document.getElementById("roll-number");
+      const holdButton = document.getElementById("hold-button");
+      const buildButton = document.getElementById("build-button");
+      const consoleBox = document.getElementById("console");
+      const simulator = new window.HackEmulator();
+      const pressedKeys = new Map();
+      const specialKeys = {
+        Backspace: 129, ArrowLeft: 130, ArrowUp: 131, ArrowRight: 132, ArrowDown: 133,
+        Home: 134, End: 135, PageUp: 136, PageDown: 137, Insert: 138, Delete: 139,
+        Escape: 140
+      };
+      let simulatorReady = false;
+      let loadedK = 85;
+      let running = false;
+      let framePending = false;
+      let pointerHeld = false;
+      let buildBusy = false;
+      let toastTimer;
+
+      function projectValues() {
+        const roll = rollField.value.trim();
+        const k = /^[0-9]+$/.test(roll) ? Number(roll.slice(-2)) : 85;
+        const words = (k % 4) + 1;
+        return { k: k, width: words * 16, end: k + 19 };
+      }
+
+      function drawScreen() {
+        const values = projectValues();
+        const pixels = context.createImageData(512, 256);
+        const image = pixels.data;
+        const off = [232, 228, 234];
+        const on = [12, 10, 14];
+        for (let row = 0; row < 256; row += 1) {
+          for (let wordIndex = 0; wordIndex < 32; wordIndex += 1) {
+            const word = simulatorReady ? simulator.ram[16384 + row * 32 + wordIndex] : 0;
+            for (let bit = 0; bit < 16; bit += 1) {
+              const isOn = ((word >> (15 - bit)) & 1) !== 0;
+              const offset = (row * 512 + wordIndex * 16 + bit) * 4;
+              const color = isOn ? on : off;
+              image[offset] = color[0];
+              image[offset + 1] = color[1];
+              image[offset + 2] = color[2];
+              image[offset + 3] = 255;
+            }
+          }
+        }
+        context.putImageData(pixels, 0, 0);
+        document.getElementById("screen-coords").textContent =
+          "ROW " + values.k + " — " + values.end + " · COL 0 — " + (values.width - 1);
+        document.getElementById("metric-k").textContent = String(values.k);
+        document.getElementById("metric-size").textContent = values.width + " × 20";
+        document.getElementById("metric-location").textContent = "Row " + values.k;
+        document.getElementById("hero-box-size").textContent = values.width + " × 20 pixel box";
+        document.getElementById("box-rows").textContent = values.k + "–" + values.end;
+        document.getElementById("box-width-inline").textContent = values.width + " pixels";
+        document.getElementById("feature-detail").textContent = "K mod 3 = " + (values.k % 3);
+        document.getElementById("metric-feature").textContent =
+          ["Symbols file", "Line errors", "Duplicate warning"][values.k % 3];
+      }
+
+      function currentKeyCode() {
+        if (pointerHeld) return 32;
+        const firstKey = pressedKeys.values().next();
+        return firstKey.done ? 0 : firstKey.value;
+      }
+
+      function keyCodeForEvent(event) {
+        if (specialKeys[event.key]) return specialKeys[event.key];
+        if (event.key.length === 1) {
+          const code = event.key.toUpperCase().charCodeAt(0);
+          if (code >= 32 && code <= 126) return code;
+        }
+        return event.keyCode || 0;
+      }
+
+      function updateKeyboard() {
+        const keyCode = currentKeyCode();
+        if (simulatorReady) simulator.setKeyboard(keyCode);
+        document.getElementById("sim-kbd").textContent = String(keyCode);
+        holdButton.setAttribute("aria-pressed", String(keyCode !== 0));
+        updateSimulatorStatus();
+      }
+
+      function updateSimulatorStatus() {
+        const state = document.getElementById("sim-state");
+        const screenState = document.getElementById("screen-state");
+        const requestedK = projectValues().k;
+        if (!simulatorReady) {
+          state.textContent = "LOADING";
+          screenState.textContent = "LOADING ROM";
+          return;
+        }
+        state.textContent = requestedK === loadedK ? (running ? "RUNNING" : "PAUSED") : "REBUILD FOR K=" + requestedK;
+        screenState.textContent = currentKeyCode()
+          ? "KEY " + currentKeyCode() + " · " + (running ? "RUNNING" : "PAUSED")
+          : (running ? "CPU RUNNING" : "SIMULATION PAUSED");
+        document.getElementById("sim-pc").textContent = simulator.pc.toString(16).toUpperCase().padStart(4, "0");
+        document.getElementById("sim-cycles").textContent = simulator.cycles.toLocaleString();
+        document.getElementById("sim-k").textContent = String(loadedK);
+      }
+
+      function showToast(message) {
+        const toast = document.getElementById("toast");
+        toast.textContent = message;
+        toast.hidden = false;
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () { toast.hidden = true; }, 2500);
+      }
+
+      function scheduleSimulationFrame() {
+        if (!running || framePending) return;
+        framePending = true;
+        window.requestAnimationFrame(function () {
+          framePending = false;
+          if (!running) return;
+          simulator.run(5000);
+          drawScreen();
+          updateSimulatorStatus();
+          scheduleSimulationFrame();
+        });
+      }
+
+      function startSimulation() {
+        if (!simulatorReady) return;
+        running = true;
+        updateSimulatorStatus();
+        scheduleSimulationFrame();
+      }
+
+      function pauseSimulation() {
+        running = false;
+        updateSimulatorStatus();
+      }
+
+      async function loadSimulator() {
+        pauseSimulation();
+        simulatorReady = false;
+        updateSimulatorStatus();
+        const response = await fetch("/Box.hack?cache=" + Date.now());
+        if (!response.ok) throw new Error("Could not load Box.hack (" + response.status + ").");
+        simulator.load(await response.text());
+        simulatorReady = true;
+        loadedK = projectValues().k;
+        document.querySelectorAll(".sim-button").forEach(function (button) { button.disabled = false; });
+        updateKeyboard();
+        drawScreen();
+        startSimulation();
+      }
+
+      holdButton.addEventListener("pointerdown", function (event) {
+        event.preventDefault();
+        holdButton.setPointerCapture(event.pointerId);
+        pointerHeld = true;
+        updateKeyboard();
+      });
+      holdButton.addEventListener("pointerup", function () { pointerHeld = false; updateKeyboard(); });
+      holdButton.addEventListener("pointercancel", function () { pointerHeld = false; updateKeyboard(); });
+      holdButton.addEventListener("lostpointercapture", function () { pointerHeld = false; updateKeyboard(); });
+      window.addEventListener("keydown", function (event) {
+        if (event.repeat || event.target.matches("input, textarea, select, [contenteditable='true']")) return;
+        if (event.code === "Space" && event.target === document.body) event.preventDefault();
+        pressedKeys.set(event.code, keyCodeForEvent(event));
+        updateKeyboard();
+      });
+      window.addEventListener("keyup", function (event) {
+        pressedKeys.delete(event.code);
+        updateKeyboard();
+      });
+      window.addEventListener("blur", function () {
+        pressedKeys.clear();
+        pointerHeld = false;
+        updateKeyboard();
+      });
+      rollField.addEventListener("input", function () {
+        drawScreen();
+        updateSimulatorStatus();
+      });
+
+      rollField.addEventListener("change", function () {
+        const digits = rollField.value.trim();
+        if (!/^[0-9]+$/.test(digits)) {
+          showToast("Enter a numeric university roll number.");
+          rollField.value = "2501730385";
+          drawScreen();
+          updateSimulatorStatus();
+          return;
+        }
+        drawScreen();
+        updateSimulatorStatus();
+      });
+
+      document.getElementById("sim-run").addEventListener("click", startSimulation);
+      document.getElementById("sim-pause").addEventListener("click", pauseSimulation);
+      document.getElementById("sim-step").addEventListener("click", function () {
+        if (!simulatorReady) return;
+        pauseSimulation();
+        simulator.step();
+        drawScreen();
+        updateSimulatorStatus();
+      });
+      document.getElementById("sim-reset").addEventListener("click", function () {
+        if (!simulatorReady) return;
+        simulator.reset();
+        updateKeyboard();
+        drawScreen();
+        startSimulation();
+      });
+
+      document.getElementById("build-form").addEventListener("submit", async function (event) {
+        event.preventDefault();
+        const digits = rollField.value.trim();
+        if (!/^[0-9]+$/.test(digits)) {
+          showToast("Enter a numeric university roll number.");
+          rollField.focus();
+          return;
+        }
+        if (buildBusy) return;
+        buildBusy = true;
+        buildButton.disabled = true;
+        buildButton.textContent = "Building…";
+        consoleBox.classList.remove("error");
+        consoleBox.textContent = "Running run_all.py. This may take a moment…";
+        document.getElementById("build-state").textContent = "RUNNING";
+        try {
+          const response = await fetch("/api/build", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ k: Number(digits.slice(-2)) })
+          });
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.error || "Build request failed.");
+          const output = [result.stdout, result.stderr].filter(Boolean).join("\n").trim();
+          consoleBox.textContent = output || ("Build finished with exit code " + result.returncode + ".");
+          consoleBox.classList.toggle("error", !result.ok);
+          document.getElementById("build-state").textContent = result.ok ? "COMPLETE" : "FAILED";
+          if (result.ok) {
+            showToast("Build complete · project artifacts refreshed");
+            await refreshStatus();
+            await loadSimulator();
+          }
+        } catch (error) {
+          consoleBox.textContent = "Build error: " + error.message;
+          consoleBox.classList.add("error");
+          document.getElementById("build-state").textContent = "FAILED";
+        } finally {
+          buildBusy = false;
+          buildButton.disabled = false;
+          buildButton.innerHTML = 'Run build <span aria-hidden="true">→</span>';
+        }
+      });
+
+      async function refreshStatus() {
+        try {
+          const response = await fetch("/api/status");
+          if (!response.ok) throw new Error("Status request failed.");
+          const { files } = await response.json();
+          document.querySelectorAll("[data-file]").forEach(function (chip) {
+            const exists = Boolean(files[chip.dataset.file]);
+            chip.classList.toggle("absent", !exists);
+            chip.title = exists ? "Present in the project folder" : "Not present in the project folder";
+          });
+          const hdlReady = ["hdl/CPU.hdl", "hdl/Memory.hdl", "hdl/Computer.hdl"].every(function (name) { return files[name]; });
+          const hdlStatus = document.getElementById("hdl-status");
+          hdlStatus.textContent = hdlReady ? "HDL files ready" : "HDL files missing";
+          hdlStatus.classList.toggle("missing", !hdlReady);
+          const assemblerReady = Boolean(files["assembler.py"]);
+          document.getElementById("assembler-status").textContent = assemblerReady ? "Assembler available" : "Assembler missing";
+          const boxReady = Boolean(files["Box.asm"] && files["Box.hack"]);
+          const boxStatus = document.getElementById("box-status");
+          boxStatus.textContent = boxReady ? "Box program available" : "Box files missing";
+          boxStatus.classList.toggle("missing", !boxReady);
+        } catch (error) {
+          showToast("Could not check project files: " + error.message);
+        }
+      }
+
+      document.querySelectorAll(".nav a").forEach(function (link) {
+        link.addEventListener("click", function () {
+          document.querySelectorAll(".nav a").forEach(function (item) { item.classList.remove("active"); });
+          link.classList.add("active");
+        });
+      });
+
+      drawScreen();
+      refreshStatus();
+      loadSimulator().catch(function (error) {
+        document.getElementById("sim-state").textContent = "ERROR";
+        document.getElementById("screen-state").textContent = "ROM LOAD FAILED";
+        showToast(error.message);
+      });
+    }());
+  </script>
+</body>
+</html>
